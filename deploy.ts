@@ -26,16 +26,14 @@ function getPluginsDir(): string {
 function copyRecursive(src: string, dest: string): void {
   const stat = statSync(src)
 
-  if (stat.isDirectory()) {
-    if (!existsSync(dest)) {
-      mkdirSync(dest, { recursive: true })
-    }
-    const files = readdirSync(src)
-    for (const file of files) {
-      copyRecursive(join(src, file), join(dest, file))
-    }
-  } else {
+  if (!stat.isDirectory()) {
     copyFileSync(src, dest)
+    return
+  }
+
+  mkdirSync(dest, { recursive: true })
+  for (const file of readdirSync(src)) {
+    copyRecursive(join(src, file), join(dest, file))
   }
 }
 
@@ -50,36 +48,47 @@ function build(): void {
   }
 }
 
+const PRESERVED_FILES = ['config.jsonc']
+
+function shouldPreserveFile(file: string): boolean {
+  return PRESERVED_FILES.includes(file)
+}
+
+function removeExistingFile(destPath: string, file: string): void {
+  if (!existsSync(destPath)) {
+    return
+  }
+
+  const isDirectory = statSync(destPath).isDirectory()
+
+  if (isDirectory) {
+    console.log(`  Removing existing ${file}/`)
+    rmSync(destPath, { recursive: true, force: true })
+    return
+  }
+
+  if (shouldPreserveFile(file)) {
+    console.log(`  Preserving existing ${file}`)
+    return
+  }
+
+  console.log(`  Removing existing ${file}`)
+  rmSync(destPath, { force: true })
+}
+
 function install(): void {
   const pluginsDir = getPluginsDir()
-  console.log(`Installing to ${pluginsDir}...`)
-
   const distDir = 'dist'
+
+  console.log(`Installing to ${pluginsDir}...`)
 
   if (!existsSync(distDir)) {
     console.error('✗ dist/ directory not found. Run build first.')
     process.exit(1)
   }
 
-  const files = readdirSync(distDir)
-
-  for (const file of files) {
-    const destPath = join(pluginsDir, file)
-
-    if (existsSync(destPath)) {
-      const stat = statSync(destPath)
-      if (stat.isDirectory()) {
-        console.log(`  Removing existing ${file}/`)
-        rmSync(destPath, { recursive: true, force: true })
-      } else {
-        if (file === 'config.jsonc') {
-          console.log(`  Preserving existing ${file}`)
-          continue
-        }
-        console.log(`  Removing existing ${file}`)
-        rmSync(destPath, { force: true })
-      }
-    }
+  for (const file of readdirSync(distDir)) {
+    removeExistingFile(join(pluginsDir, file), file)
   }
 
   console.log('  Copying files...')
