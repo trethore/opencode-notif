@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
-import { readFileSync } from 'fs'
+import { readFileSync, existsSync } from 'fs'
 import type {
   PluginConfig,
   NotificationEventType,
@@ -23,14 +23,28 @@ function stripJsonComments(str: string): string {
 }
 
 export function loadConfig(): PluginConfig {
+  const configPath = join(__dirname, 'notif.jsonc')
+
+  if (!existsSync(configPath)) {
+    console.error(`Config file not found: ${configPath}. Using default settings.`)
+    return {}
+  }
+
+  let content: string
   try {
-    const configPath = join(__dirname, 'notif.jsonc')
-    const content = readFileSync(configPath, 'utf-8')
+    content = readFileSync(configPath, 'utf-8')
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    console.error(`Failed to read config file: ${message}. Using default settings.`)
+    return {}
+  }
+
+  try {
     const stripped = stripJsonComments(content)
     return JSON.parse(stripped) as PluginConfig
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
-    console.error('Failed to load notif.jsonc:', message)
+    console.error(`Failed to parse config file (invalid JSON): ${message}. Using default settings.`)
     return {}
   }
 }
