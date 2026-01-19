@@ -2,13 +2,15 @@
   "name": "opencode-notificator",
   "version": "1.0.0",
   "description": "OpenCode plugin for desktop notifications",
-  "main": "notificator.js",
+  "main": "src/notificator.ts",
   "type": "module",
   "scripts": {
-    "build": "node build.js",
-    "deploy": "node deploy.js",
-    "deploy:build": "node deploy.js --build-only",
-    "deploy:install": "node deploy.js --install-only"
+    "build": "tsx build.ts",
+    "deploy": "tsx deploy.ts",
+    "deploy:build": "tsx deploy.ts --build-only",
+    "deploy:install": "tsx deploy.ts --install-only",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
   },
   "keywords": [
     "opencode",
@@ -22,6 +24,12 @@
     "@opencode-ai/plugin": "^1.0.203"
   },
   "devDependencies": {
-    "esbuild": "^0.20.0"
+    "@eslint/js": "^9.39.2",
+    "@types/node": "^25.0.9",
+    "esbuild": "^0.20.0",
+    "eslint": "^9.39.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.53.1"
   }
 }

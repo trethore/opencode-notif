@@ -1,18 +1,21 @@
 #!/usr/bin/env node
 
 import { execSync } from 'child_process'
-import { readFileSync, rmSync, existsSync, mkdirSync, copyFileSync, readdirSync, statSync } from 'fs'
+import { rmSync, existsSync, mkdirSync, copyFileSync, readdirSync, statSync } from 'fs'
 import { join } from 'path'
 import { homedir } from 'os'
 
-const PLUGINS_DIR = {
+type Platform = 'linux' | 'darwin' | 'win32'
+
+const PLUGINS_DIR: Record<Platform, string> = {
   linux: join(homedir(), '.config', 'opencode', 'plugin'),
   darwin: join(homedir(), '.config', 'opencode', 'plugin'),
   win32: join(process.env.APPDATA || join(homedir(), 'AppData', 'Roaming'), 'opencode', 'plugin')
 }
 
-function getPluginsDir() {
-  const dir = PLUGINS_DIR[process.platform]
+function getPluginsDir(): string {
+  const platform = process.platform as Platform
+  const dir = PLUGINS_DIR[platform]
   if (!dir) {
     console.error(`Unsupported platform: ${process.platform}`)
     process.exit(1)
@@ -20,7 +23,7 @@ function getPluginsDir() {
   return dir
 }
 
-function copyRecursive(src, dest) {
+function copyRecursive(src: string, dest: string): void {
   const stat = statSync(src)
 
   if (stat.isDirectory()) {
@@ -36,18 +39,18 @@ function copyRecursive(src, dest) {
   }
 }
 
-function build() {
+function build(): void {
   console.log('Building plugin...')
   try {
     execSync('npm run build', { stdio: 'inherit' })
     console.log('✓ Build complete')
-  } catch (error) {
+  } catch {
     console.error('✗ Build failed')
     process.exit(1)
   }
 }
 
-function install() {
+function install(): void {
   const pluginsDir = getPluginsDir()
   console.log(`Installing to ${pluginsDir}...`)
 
@@ -61,7 +64,6 @@ function install() {
   const files = readdirSync(distDir)
 
   for (const file of files) {
-    const srcPath = join(distDir, file)
     const destPath = join(pluginsDir, file)
 
     if (existsSync(destPath)) {
@@ -70,7 +72,7 @@ function install() {
         console.log(`  Removing existing ${file}/`)
         rmSync(destPath, { recursive: true, force: true })
       } else {
-        if (file === 'notificator.jsonc') {
+        if (file === 'config.jsonc') {
           console.log(`  Preserving existing ${file}`)
           continue
         }
@@ -85,7 +87,7 @@ function install() {
   console.log('✓ Installation complete')
 }
 
-function main() {
+function main(): void {
   const args = process.argv.slice(2)
   const buildOnly = args.includes('--build-only') || args.includes('-b')
   const installOnly = args.includes('--install-only') || args.includes('-i')

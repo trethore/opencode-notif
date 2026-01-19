@@ -16,8 +16,8 @@
     "enabled": true,
     
     // Option 1: Explicit sound file
-    // Sound file to play: ding1.mp3, ding2.mp3, ..., ding6.mp3
-    // "file": "ding1.mp3",
+    // Sound file to play from assets/sounds/ (e.g., default.mp3)
+    // "file": "default.mp3",
     
     // Option 2: Auto-pick based on project (recommended)
     // Uses a hash of project path + seed to pick a consistent sound per project.
