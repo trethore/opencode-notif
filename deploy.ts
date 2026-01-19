@@ -27,6 +27,10 @@ function copyRecursive(src: string, dest: string): void {
   const stat = statSync(src)
 
   if (!stat.isDirectory()) {
+    const fileName = src.split('/').pop() || ''
+    if (shouldPreserveFile(fileName) && existsSync(dest)) {
+      return
+    }
     copyFileSync(src, dest)
     return
   }
