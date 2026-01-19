@@ -48,7 +48,7 @@ function build(): void {
   }
 }
 
-const PRESERVED_FILES = ['config.jsonc']
+const PRESERVED_FILES = ['notif.jsonc']
 
 function shouldPreserveFile(file: string): boolean {
   return PRESERVED_FILES.includes(file)

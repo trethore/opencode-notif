@@ -24,13 +24,13 @@ function stripJsonComments(str: string): string {
 
 export function loadConfig(): PluginConfig {
   try {
-    const configPath = join(__dirname, 'config.jsonc')
+    const configPath = join(__dirname, 'notif.jsonc')
     const content = readFileSync(configPath, 'utf-8')
     const stripped = stripJsonComments(content)
     return JSON.parse(stripped) as PluginConfig
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
-    console.error('Failed to load config.jsonc:', message)
+    console.error('Failed to load notif.jsonc:', message)
     return {}
   }
 }

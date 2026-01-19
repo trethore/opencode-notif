@@ -1,8 +1,8 @@
 {
-  "name": "opencode-notificator",
+  "name": "opencode-notif",
   "version": "1.0.0",
   "description": "OpenCode plugin for desktop notifications",
-  "main": "src/notificator.ts",
+  "main": "src/notif.ts",
   "type": "module",
   "scripts": {
     "build": "tsx build.ts",
@@ -18,7 +18,7 @@
     "notifications",
     "desktop"
   ],
-  "author": "panta82",
+  "author": "trethore",
   "license": "MIT",
   "dependencies": {
     "@opencode-ai/plugin": "^1.1.25"
