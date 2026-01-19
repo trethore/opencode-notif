@@ -2,7 +2,7 @@ import { build as esbuild } from 'esbuild'
 import { readdirSync, statSync, copyFileSync, mkdirSync } from 'fs'
 import { join } from 'path'
 
-async function copyRecursive(src, dest) {
+function copyRecursive(src: string, dest: string): void {
   const stat = statSync(src)
 
   if (stat.isDirectory()) {
@@ -16,13 +16,13 @@ async function copyRecursive(src, dest) {
   }
 }
 
-async function build() {
+async function build(): Promise<void> {
   console.log('Building...')
 
   await esbuild({
-    entryPoints: ['notificator.js'],
+    entryPoints: ['src/notif.ts'],
     bundle: true,
-    outfile: 'dist/notificator.js',
+    outfile: 'dist/notif.js',
     platform: 'node',
     target: 'node18',
     format: 'esm',
@@ -31,10 +31,10 @@ async function build() {
   })
 
   console.log('Copying sounds...')
-  copyRecursive('notificator-sounds', 'dist/notificator-sounds')
+  copyRecursive('src/assets/sounds', 'dist/assets/sounds')
 
   console.log('Copying config...')
-  copyFileSync('notificator.jsonc', 'dist/notificator.jsonc')
+  copyFileSync('src/notif.jsonc', 'dist/notif.jsonc')
 
   console.log('Build complete! Copy dist/ to your OpenCode plugins directory.')
 }

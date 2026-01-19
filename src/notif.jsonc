@@ -1,0 +1,33 @@
+{
+  // Notificator Plugin Configuration
+  
+  // Enable/disable the entire plugin
+  "enabled": true,
+  
+  // Global settings (apply to all events unless overridden)
+  "showDesktopNotification": true,
+  "soundAlert": true,
+  "soundFile": "default.mp3",
+  "volume": 0.8,
+  
+  // Cooldown in seconds - prevents notification spam
+  "cooldown": 30,
+  
+  // Per-event permissions (override global settings)
+  "permissions": {
+    "generationCompleted": {
+      "enabled": true
+      // Uses global defaults for other settings
+    },
+    "permissionRequested": {
+      "enabled": true
+    },
+    "questionAsked": {
+      "enabled": true
+    },
+    "sessionError": {
+      "enabled": true,
+      "message": "Error in {projectName}"
+    }
+  }
+}
