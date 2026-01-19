@@ -21,12 +21,12 @@
   "author": "panta82",
   "license": "MIT",
   "dependencies": {
-    "@opencode-ai/plugin": "^1.0.203"
+    "@opencode-ai/plugin": "^1.1.25"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "@types/node": "^25.0.9",
-    "esbuild": "^0.20.0",
+    "esbuild": "^0.27.2",
     "eslint": "^9.39.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
