@@ -9,6 +9,8 @@
     "deploy": "tsx deploy.ts",
     "deploy:build": "tsx deploy.ts --build-only",
     "deploy:install": "tsx deploy.ts --install-only",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit"
   },
@@ -21,13 +23,14 @@
   "author": "trethore",
   "license": "MIT",
   "dependencies": {
-    "@opencode-ai/plugin": "^1.1.25"
+    "@opencode-ai/plugin": "^1.2.22"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "@types/node": "^25.0.9",
     "esbuild": "^0.27.2",
     "eslint": "^9.39.2",
+    "prettier": "^3.6.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.53.1"

@@ -20,7 +20,7 @@ npm run deploy
 
 ## Configuration
 
-Config file: `~/.config/opencode/plugin/notif.jsonc`
+Config file: `~/.config/opencode/plugins/notif.jsonc`
 
 ```jsonc
 {
@@ -28,7 +28,7 @@ Config file: `~/.config/opencode/plugin/notif.jsonc`
   "showDesktopNotification": true,
   "soundAlert": true,
   "volume": 0.8,
-  "cooldown": 30
+  "cooldown": 30,
 }
 ```
 
@@ -36,10 +36,10 @@ See [docs/configuration.md](docs/configuration.md) for all options.
 
 ## Platform Requirements
 
-| Platform | Notifications | Audio |
-|----------|---------------|-------|
-| macOS | Built-in | Built-in |
-| Linux | `libnotify-bin` | `ffmpeg` |
+| Platform | Notifications   | Audio    |
+| -------- | --------------- | -------- |
+| macOS    | Built-in        | Built-in |
+| Linux    | `libnotify-bin` | `ffmpeg` |
 
 See [docs/platform-requirements.md](docs/platform-requirements.md) for details.
 

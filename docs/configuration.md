@@ -1,26 +1,26 @@
 # Configuration
 
-Config file location: `~/.config/opencode/plugin/notif.jsonc`
+Config file location: `~/.config/opencode/plugins/notif.jsonc`
 
 ## Event Types
 
-| Event | Trigger | Description |
-|-------|---------|-------------|
-| `generationCompleted` | `session.idle` | Code generation finished |
-| `permissionRequested` | `permission.ask` | OpenCode requests permission |
-| `questionAsked` | `tool.execute.before` | OpenCode asks a question |
-| `sessionError` | `session.error` | An error occurred |
+| Event                 | Trigger               | Description                  |
+| --------------------- | --------------------- | ---------------------------- |
+| `generationCompleted` | `session.idle`        | Code generation finished     |
+| `permissionRequested` | `permission.ask`      | OpenCode requests permission |
+| `questionAsked`       | `tool.execute.before` | OpenCode asks a question     |
+| `sessionError`        | `session.error`       | An error occurred            |
 
 ## Global Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `enabled` | boolean | `true` | Master switch |
-| `showDesktopNotification` | boolean | `true` | Enable desktop notifications |
-| `soundAlert` | boolean | `true` | Enable sound alerts |
-| `soundFile` | string | `"default.mp3"` | Sound file from `assets/sounds/` |
-| `volume` | number | `0.8` | Volume level (0.0 to 1.0) |
-| `cooldown` | number | `30` | Seconds between notifications |
+| Option                    | Type    | Default         | Description                        |
+| ------------------------- | ------- | --------------- | ---------------------------------- |
+| `enabled`                 | boolean | `true`          | Master switch                      |
+| `showDesktopNotification` | boolean | `true`          | Enable desktop notifications       |
+| `soundAlert`              | boolean | `true`          | Enable sound alerts                |
+| `soundFile`               | string  | `"default.mp3"` | Built-in filename or absolute path |
+| `volume`                  | number  | `0.8`           | Volume level (0.0 to 1.0)          |
+| `cooldown`                | number  | `30`            | Seconds between notifications      |
 
 ## Per-Event Overrides
 
@@ -35,18 +35,18 @@ Each event can override global settings:
       "soundAlert": true,
       "soundFile": "ding1.mp3",
       "volume": 0.5,
-      "message": "Done with {projectName}!"
-    }
-  }
+      "message": "Done with {projectName}!",
+    },
+  },
 }
 ```
 
 ## Message Templates
 
-| Placeholder | Description |
-|-------------|-------------|
+| Placeholder     | Description                    |
+| --------------- | ------------------------------ |
 | `{projectName}` | Current project directory name |
-| `{eventType}` | Event type identifier |
+| `{eventType}`   | Event type identifier          |
 
 ## Examples
 
@@ -58,9 +58,9 @@ Each event can override global settings:
   "permissions": {
     "sessionError": {
       "soundAlert": true,
-      "volume": 1.0
-    }
-  }
+      "volume": 1.0,
+    },
+  },
 }
 ```
 
@@ -72,8 +72,8 @@ Each event can override global settings:
     "generationCompleted": { "enabled": true },
     "permissionRequested": { "enabled": false },
     "questionAsked": { "enabled": true },
-    "sessionError": { "enabled": false }
-  }
+    "sessionError": { "enabled": false },
+  },
 }
 ```
 
@@ -82,7 +82,7 @@ Each event can override global settings:
 ```jsonc
 {
   "showDesktopNotification": true,
-  "soundAlert": false
+  "soundAlert": false,
 }
 ```
 
@@ -91,18 +91,26 @@ Each event can override global settings:
 ```jsonc
 {
   "showDesktopNotification": false,
-  "soundAlert": true
+  "soundAlert": true,
 }
 ```
 
 ## Custom Sounds
 
-Add audio files to `~/.config/opencode/plugin/notif-sounds/`.
+Add audio files to `~/.config/opencode/plugins/notif-sounds/`.
 
 Supported formats: `.mp3`, `.wav`, `.ogg`, `.m4a`, `.aac`, `.flac`
 
 ```jsonc
 {
-  "soundFile": "my-custom-sound.mp3"
+  "soundFile": "my-custom-sound.mp3",
+}
+```
+
+Absolute paths are also supported:
+
+```jsonc
+{
+  "soundFile": "/home/titou/.config/opencode/sound/notify.mp3",
 }
 ```

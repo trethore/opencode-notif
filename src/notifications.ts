@@ -1,4 +1,4 @@
-import { join } from 'path'
+import { isAbsolute, join } from 'path'
 import { existsSync } from 'fs'
 import type { BunShell } from './types.js'
 import { getAssetsPath } from './config.js'
@@ -20,7 +20,9 @@ async function checkNotifySend($: BunShell): Promise<boolean> {
   if (notifySendAvailable !== null) return notifySendAvailable
   notifySendAvailable = await checkCommand($, 'notify-send')
   if (!notifySendAvailable) {
-    console.error('notify-send is not installed. Install it with: sudo apt install libnotify-bin')
+    console.error(
+      'notify-send is not installed. Install it with: sudo apt install libnotify-bin'
+    )
   }
   return notifySendAvailable
 }
@@ -29,14 +31,18 @@ async function checkFfplay($: BunShell): Promise<boolean> {
   if (ffplayAvailable !== null) return ffplayAvailable
   ffplayAvailable = await checkCommand($, 'ffplay')
   if (!ffplayAvailable) {
-    console.error('ffplay is not installed. Install it with: sudo apt install ffmpeg')
+    console.error(
+      'ffplay is not installed. Install it with: sudo apt install ffmpeg'
+    )
   }
   return ffplayAvailable
 }
 
 function warnUnsupportedPlatform(platform: string): void {
   if (unsupportedPlatformWarningShown) return
-  console.error(`Unsupported platform: ${platform}. Notifications are only supported on macOS and Linux.`)
+  console.error(
+    `Unsupported platform: ${platform}. Notifications are only supported on macOS and Linux.`
+  )
   unsupportedPlatformWarningShown = true
 }
 
@@ -73,7 +79,9 @@ export async function playNotificationSound(
   volume: number,
   $: BunShell
 ): Promise<void> {
-  const soundPath = join(getAssetsPath(), 'sounds', soundFile)
+  const soundPath = isAbsolute(soundFile)
+    ? soundFile
+    : join(getAssetsPath(), 'sounds', soundFile)
   const platform = process.platform
   const clampedVolume = Math.max(0, Math.min(1, volume))
 

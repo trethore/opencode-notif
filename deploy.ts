@@ -1,16 +1,27 @@
 #!/usr/bin/env node
 
 import { execSync } from 'child_process'
-import { rmSync, existsSync, mkdirSync, copyFileSync, readdirSync, statSync } from 'fs'
+import {
+  rmSync,
+  existsSync,
+  mkdirSync,
+  copyFileSync,
+  readdirSync,
+  statSync,
+} from 'fs'
 import { join } from 'path'
 import { homedir } from 'os'
 
 type Platform = 'linux' | 'darwin' | 'win32'
 
 const PLUGINS_DIR: Record<Platform, string> = {
-  linux: join(homedir(), '.config', 'opencode', 'plugin'),
-  darwin: join(homedir(), '.config', 'opencode', 'plugin'),
-  win32: join(process.env.APPDATA || join(homedir(), 'AppData', 'Roaming'), 'opencode', 'plugin')
+  linux: join(homedir(), '.config', 'opencode', 'plugins'),
+  darwin: join(homedir(), '.config', 'opencode', 'plugins'),
+  win32: join(
+    process.env.APPDATA || join(homedir(), 'AppData', 'Roaming'),
+    'opencode',
+    'plugins'
+  ),
 }
 
 function getPluginsDir(): string {

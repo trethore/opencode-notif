@@ -1,3 +1,5 @@
+import type { PluginInput } from '@opencode-ai/plugin'
+
 export type NotificationEventType =
   | 'generationCompleted'
   | 'permissionRequested'
@@ -39,32 +41,12 @@ export interface EffectiveEventConfig {
   message: string | null
 }
 
-export interface PluginContext {
-  project: unknown
-  client: unknown
-  $: BunShell
-  directory: string
-  worktree?: string
-}
-
-export interface PluginEvent {
-  type: string
-  sessionID?: string
-}
-
-export interface PermissionInput {
-  type: string
-}
-
 export interface MessageContext {
   projectName: string | null
   eventType: NotificationEventType
 }
 
-export type BunShell = (
-  strings: TemplateStringsArray,
-  ...values: unknown[]
-) => { quiet: () => Promise<unknown> }
+export type BunShell = PluginInput['$']
 
 export const DEFAULT_MESSAGES: Record<NotificationEventType, string> = {
   generationCompleted: 'Generation completed',

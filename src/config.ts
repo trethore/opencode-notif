@@ -17,16 +17,16 @@ export function getAssetsPath(): string {
 }
 
 function stripJsonComments(str: string): string {
-  return str
-    .replace(/\/\/.*$/gm, '')
-    .replace(/\/\*[\s\S]*?\*\//g, '')
+  return str.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '')
 }
 
 export function loadConfig(): PluginConfig {
   const configPath = join(__dirname, 'notif.jsonc')
 
   if (!existsSync(configPath)) {
-    console.error(`Config file not found: ${configPath}. Using default settings.`)
+    console.error(
+      `Config file not found: ${configPath}. Using default settings.`
+    )
     return {}
   }
 
@@ -35,7 +35,9 @@ export function loadConfig(): PluginConfig {
     content = readFileSync(configPath, 'utf-8')
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
-    console.error(`Failed to read config file: ${message}. Using default settings.`)
+    console.error(
+      `Failed to read config file: ${message}. Using default settings.`
+    )
     return {}
   }
 
@@ -44,7 +46,9 @@ export function loadConfig(): PluginConfig {
     return JSON.parse(stripped) as PluginConfig
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
-    console.error(`Failed to parse config file (invalid JSON): ${message}. Using default settings.`)
+    console.error(
+      `Failed to parse config file (invalid JSON): ${message}. Using default settings.`
+    )
     return {}
   }
 }
@@ -57,7 +61,10 @@ export function getEffectiveConfig(
 
   return {
     enabled: eventConfig.enabled ?? true,
-    showDesktopNotification: eventConfig.showDesktopNotification ?? config.showDesktopNotification ?? true,
+    showDesktopNotification:
+      eventConfig.showDesktopNotification ??
+      config.showDesktopNotification ??
+      true,
     soundAlert: eventConfig.soundAlert ?? config.soundAlert ?? true,
     soundFile: eventConfig.soundFile ?? config.soundFile ?? 'default.mp3',
     volume: eventConfig.volume ?? config.volume ?? 0.8,
