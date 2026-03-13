@@ -1,4 +1,4 @@
-import { basename } from 'path'
+import { basename } from 'node:path'
 import type { Plugin } from '@opencode-ai/plugin'
 import type { NotificationEventType, PluginConfig, BunShell } from './types.js'
 import {

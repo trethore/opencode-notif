@@ -1,0 +1,5 @@
+# Default: let Git auto-detect text files
+* text=auto
+
+# Force LF for TypeScript files
+*.ts  text eol=lf

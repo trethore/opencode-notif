@@ -1,6 +1,6 @@
 import { build as esbuild } from 'esbuild'
-import { readdirSync, statSync, copyFileSync, mkdirSync } from 'fs'
-import { join } from 'path'
+import { readdirSync, statSync, copyFileSync, mkdirSync } from 'node:fs'
+import { join } from 'node:path'
 
 function copyRecursive(src: string, dest: string): void {
   const stat = statSync(src)
@@ -39,4 +39,9 @@ async function build(): Promise<void> {
   console.log('Build complete! Copy dist/ to your OpenCode plugins directory.')
 }
 
-build().catch(console.error)
+try {
+  await build()
+} catch (error) {
+  console.error(error)
+  process.exit(1)
+}

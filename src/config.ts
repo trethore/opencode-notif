@@ -1,13 +1,13 @@
-import { fileURLToPath } from 'url'
-import { dirname, join } from 'path'
-import { readFileSync, existsSync } from 'fs'
+import { fileURLToPath } from 'node:url'
+import { dirname, join } from 'node:path'
+import { readFileSync, existsSync } from 'node:fs'
 import type {
   PluginConfig,
   NotificationEventType,
   EffectiveEventConfig,
   MessageContext,
 } from './types.js'
-import { DEFAULT_MESSAGES } from './types.js'
+export { DEFAULT_MESSAGES } from './types.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -17,7 +17,7 @@ export function getAssetsPath(): string {
 }
 
 function stripJsonComments(str: string): string {
-  return str.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '')
+  return str.replaceAll(/\/\/.*$/gm, '').replaceAll(/\/\*[\s\S]*?\*\//g, '')
 }
 
 export function loadConfig(): PluginConfig {
@@ -80,8 +80,6 @@ export function formatMessage(
   const message = template ?? defaultMessage
 
   return message
-    .replace(/{projectName}/g, context.projectName ?? 'Unknown Project')
-    .replace(/{eventType}/g, context.eventType)
+    .replaceAll('{projectName}', context.projectName ?? 'Unknown Project')
+    .replaceAll('{eventType}', context.eventType)
 }
-
-export { DEFAULT_MESSAGES }

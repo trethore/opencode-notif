@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { execSync } from 'child_process'
+import { execSync } from 'node:child_process'
 import {
   rmSync,
   existsSync,
@@ -8,9 +8,9 @@ import {
   copyFileSync,
   readdirSync,
   statSync,
-} from 'fs'
-import { join } from 'path'
-import { homedir } from 'os'
+} from 'node:fs'
+import { basename, join } from 'node:path'
+import { homedir } from 'node:os'
 
 type Platform = 'linux' | 'darwin' | 'win32'
 
@@ -38,7 +38,7 @@ function copyRecursive(src: string, dest: string): void {
   const stat = statSync(src)
 
   if (!stat.isDirectory()) {
-    const fileName = src.split('/').pop() || ''
+    const fileName = basename(src)
     if (shouldPreserveFile(fileName) && existsSync(dest)) {
       return
     }
@@ -63,10 +63,10 @@ function build(): void {
   }
 }
 
-const PRESERVED_FILES = ['notif.jsonc']
+const PRESERVED_FILES = new Set(['notif.jsonc'])
 
 function shouldPreserveFile(file: string): boolean {
-  return PRESERVED_FILES.includes(file)
+  return PRESERVED_FILES.has(file)
 }
 
 function removeExistingFile(destPath: string, file: string): void {
@@ -112,9 +112,9 @@ function install(): void {
 }
 
 function main(): void {
-  const args = process.argv.slice(2)
-  const buildOnly = args.includes('--build-only') || args.includes('-b')
-  const installOnly = args.includes('--install-only') || args.includes('-i')
+  const args = new Set(process.argv.slice(2))
+  const buildOnly = args.has('--build-only') || args.has('-b')
+  const installOnly = args.has('--install-only') || args.has('-i')
 
   if (buildOnly) {
     build()

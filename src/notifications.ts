@@ -1,5 +1,5 @@
-import { isAbsolute, join } from 'path'
-import { existsSync } from 'fs'
+import { isAbsolute, join } from 'node:path'
+import { existsSync } from 'node:fs'
 import type { BunShell } from './types.js'
 import { getAssetsPath } from './config.js'
 
@@ -55,15 +55,19 @@ export async function sendNotification(
 
   try {
     if (platform === 'darwin') {
-      const escapedMessage = message.replace(/'/g, "'\"'\"'")
-      const escapedTitle = title.replace(/'/g, "'\"'\"'")
+      const escapedMessage = message.replaceAll("'", "'\"'\"'")
+      const escapedTitle = title.replaceAll("'", "'\"'\"'")
       await $`osascript -e 'display notification "${escapedMessage}" with title "${escapedTitle}"'`.quiet()
     } else if (platform === 'linux') {
       if (!(await checkNotifySend($))) {
         return
       }
-      const escapedMessage = message.replace(/"/g, '\\"').replace(/\n/g, ' ')
-      const escapedTitle = title.replace(/"/g, '\\"').replace(/\n/g, ' ')
+      const escapedMessage = message
+        .replaceAll('"', String.raw`\"`)
+        .replaceAll('\n', ' ')
+      const escapedTitle = title
+        .replaceAll('"', String.raw`\"`)
+        .replaceAll('\n', ' ')
       await $`notify-send "${escapedTitle}" "${escapedMessage}"`.quiet()
     } else {
       warnUnsupportedPlatform(platform)
