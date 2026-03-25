@@ -8,8 +8,8 @@ Config file location after install: `~/.config/opencode/plugins/notif.jsonc`
 
 | Event                 | Trigger               | Description                  |
 | --------------------- | --------------------- | ---------------------------- |
-| `generationCompleted` | `session.idle`        | Code generation finished     |
-| `permissionRequested` | `permission.ask`      | OpenCode requests permission |
+| `generationCompleted` | `session.status`      | Code generation finished     |
+| `permissionRequested` | `permission.asked`    | OpenCode requests permission |
 | `questionAsked`       | `tool.execute.before` | OpenCode asks a question     |
 | `sessionError`        | `session.error`       | An error occurred            |
 
@@ -20,7 +20,7 @@ Config file location after install: `~/.config/opencode/plugins/notif.jsonc`
 | `enabled`                 | boolean | `true`          | Master switch                      |
 | `showDesktopNotification` | boolean | `true`          | Enable desktop notifications       |
 | `soundAlert`              | boolean | `true`          | Enable sound alerts                |
-| `soundFile`               | string  | `"default.mp3"` | Built-in filename or absolute path |
+| `soundFile`               | string  | `"default.mp3"` | Built-in file from `assets/notif/sounds/` or absolute path |
 | `volume`                  | number  | `0.8`           | Volume level (0.0 to 1.0)          |
 | `cooldown`                | number  | `30`            | Seconds between notifications      |
 
@@ -99,7 +99,11 @@ Each event can override global settings:
 
 ## Custom Sounds
 
-Add audio files to `~/.config/opencode/plugins/notif-sounds/`.
+Built-in audio lives in `assets/notif/sounds/`.
+
+Deploy only replaces `assets/notif/*`, so keep any other plugin assets elsewhere.
+
+Use absolute paths for custom sounds if you want them to survive deploys.
 
 Supported formats: `.mp3`, `.wav`, `.ogg`, `.m4a`, `.aac`, `.flac`
 
@@ -109,7 +113,7 @@ Supported formats: `.mp3`, `.wav`, `.ogg`, `.m4a`, `.aac`, `.flac`
 }
 ```
 
-Absolute paths are also supported:
+Absolute paths are also supported and recommended for user-managed sounds:
 
 ```jsonc
 {

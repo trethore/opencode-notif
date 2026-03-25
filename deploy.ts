@@ -41,6 +41,30 @@ function copyRecursive(src: string, dest: string): void {
   }
 }
 
+function replaceRecursive(src: string, dest: string): void {
+  const file = basename(src);
+
+  if (shouldPreserveFile(file) && existsSync(dest)) {
+    return;
+  }
+
+  if (existsSync(dest)) {
+    rmSync(dest, { recursive: true, force: true });
+  }
+
+  copyRecursive(src, dest);
+}
+
+function installAssets(src: string, dest: string): void {
+  const notif = join(src, 'notif');
+  if (!existsSync(notif)) {
+    return;
+  }
+
+  mkdirSync(dest, { recursive: true });
+  replaceRecursive(notif, join(dest, 'notif'));
+}
+
 function build(): void {
   console.log('Building plugin...');
   try {
@@ -92,11 +116,14 @@ function install(): void {
   }
 
   for (const file of readdirSync(distDir)) {
-    removeExistingFile(join(pluginsDir, file), file);
-  }
+    if (file === 'assets') {
+      installAssets(join(distDir, file), join(pluginsDir, file));
+      continue;
+    }
 
-  console.log('  Copying files...');
-  copyRecursive(distDir, pluginsDir);
+    removeExistingFile(join(pluginsDir, file), file);
+    replaceRecursive(join(distDir, file), join(pluginsDir, file));
+  }
   console.log('Installation complete');
 }
 

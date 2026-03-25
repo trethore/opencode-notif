@@ -14,7 +14,7 @@ const __dirname = dirname(__filename);
 const CONFIG_FILE = 'notif.jsonc';
 
 export function getAssetsPath(): string {
-  return join(__dirname, 'assets');
+  return join(__dirname, 'assets', 'notif');
 }
 
 function resolveConfigPath(): { path: string | null; tried: string[] } {

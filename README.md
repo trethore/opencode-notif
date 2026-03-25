@@ -36,6 +36,8 @@ Installed config file: `~/.config/opencode/plugins/notif.jsonc`
 
 See [docs/configuration.md](docs/configuration.md) for all options.
 
+Built-in audio lives under `assets/notif/sounds/`, and deploy only updates `assets/notif/`.
+
 ## Platform Requirements
 
 | Platform | Notifications   | Audio    |

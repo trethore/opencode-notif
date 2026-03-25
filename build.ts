@@ -33,8 +33,8 @@ async function build(): Promise<void> {
     sourcemap: true,
   });
 
-  console.log('Copying sounds...');
-  copyRecursive('src/assets/sounds', 'dist/assets/sounds');
+  console.log('Copying notif assets...');
+  copyRecursive('src/assets/notif', 'dist/assets/notif');
 
   console.log('Copying config...');
   copyFileSync(CONFIG_FILE, `dist/${PLUGIN_NAME}.jsonc`);
