@@ -17,26 +17,67 @@ export function getAssetsPath(): string {
   return join(__dirname, 'assets');
 }
 
-function resolveConfigPath(): string | null {
-  const localConfigPath = join(__dirname, CONFIG_FILE);
+function resolveConfigPath(): { path: string | null; tried: string[] } {
+  const tried = [join(__dirname, CONFIG_FILE)];
+  const localConfigPath = tried[0];
 
   if (existsSync(localConfigPath)) {
-    return localConfigPath;
+    return { path: localConfigPath, tried };
   }
 
   if (basename(__dirname) === 'src') {
     const rootConfigPath = join(__dirname, '..', CONFIG_FILE);
+    tried.push(rootConfigPath);
 
     if (existsSync(rootConfigPath)) {
-      return rootConfigPath;
+      return { path: rootConfigPath, tried };
     }
   }
 
-  return null;
+  return { path: null, tried };
 }
 
 function stripJsonComments(str: string): string {
-  return str.replaceAll(/\/\/.*$/gm, '').replaceAll(/\/\*[\s\S]*?\*\//g, '');
+  let result = '';
+  let inString = false;
+  let escaped = false;
+
+  for (let index = 0; index < str.length; index += 1) {
+    const char = str[index];
+    const next = str[index + 1];
+
+    if (!inString && char === '/' && next === '/') {
+      index += 1;
+
+      while (index + 1 < str.length && str[index + 1] !== '\n' && str[index + 1] !== '\r') {
+        index += 1;
+      }
+
+      continue;
+    }
+
+    if (!inString && char === '/' && next === '*') {
+      index += 1;
+
+      while (index + 1 < str.length) {
+        if (str[index + 1] === '*' && str[index + 2] === '/') {
+          index += 2;
+          break;
+        }
+
+        index += 1;
+      }
+
+      continue;
+    }
+
+    result += char;
+    const state = updateStringState(char, inString, escaped);
+    inString = state.inString;
+    escaped = state.escaped;
+  }
+
+  return result;
 }
 
 function getNextNonWhitespaceChar(str: string, startIndex: number): string | undefined {
@@ -117,16 +158,18 @@ function stripTrailingCommas(str: string): string {
 }
 
 export function loadConfig(): PluginConfig {
-  const configPath = resolveConfigPath();
+  const config = resolveConfigPath();
 
-  if (!configPath) {
-    console.error('Config file not found. Using default settings.');
+  if (!config.path) {
+    console.error(
+      `Config file not found. Looked in: ${config.tried.join(', ')}. Using default settings.`
+    );
     return {};
   }
 
   let content: string;
   try {
-    content = readFileSync(configPath, 'utf-8');
+    content = readFileSync(config.path, 'utf-8');
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error(`Failed to read config file: ${message}. Using default settings.`);
