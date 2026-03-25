@@ -9,9 +9,10 @@
     "deploy": "tsx deploy.ts",
     "deploy:build": "tsx deploy.ts --build-only",
     "deploy:install": "tsx deploy.ts --install-only",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format": "prettier --write \"**/*.{ts,tsx}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx}\"",
     "lint": "eslint .",
+    "sync:opencode": "tsx scripts/sync-opencode.ts",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [

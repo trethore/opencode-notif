@@ -2,6 +2,8 @@ import { build as esbuild } from 'esbuild'
 import { readdirSync, statSync, copyFileSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 
+const PLUGIN_NAME = 'notif'
+
 function copyRecursive(src: string, dest: string): void {
   const stat = statSync(src)
 
@@ -20,9 +22,9 @@ async function build(): Promise<void> {
   console.log('Building...')
 
   await esbuild({
-    entryPoints: ['src/notif.ts'],
+    entryPoints: [`src/${PLUGIN_NAME}.ts`],
     bundle: true,
-    outfile: 'dist/notif.js',
+    outfile: `dist/${PLUGIN_NAME}.js`,
     platform: 'node',
     target: 'node18',
     format: 'esm',
@@ -34,7 +36,7 @@ async function build(): Promise<void> {
   copyRecursive('src/assets/sounds', 'dist/assets/sounds')
 
   console.log('Copying config...')
-  copyFileSync('src/notif.jsonc', 'dist/notif.jsonc')
+  copyFileSync(`src/${PLUGIN_NAME}.jsonc`, `dist/${PLUGIN_NAME}.jsonc`)
 
   console.log('Build complete! Copy dist/ to your OpenCode plugins directory.')
 }

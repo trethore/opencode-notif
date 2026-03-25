@@ -1,80 +1,68 @@
-import { isAbsolute, join } from 'node:path'
-import { existsSync } from 'node:fs'
-import type { BunShell } from './types.js'
-import { getAssetsPath } from './config.js'
+import { isAbsolute, join } from 'node:path';
+import { existsSync } from 'node:fs';
+import type { BunShell } from './types.js';
+import { getAssetsPath } from './config.js';
 
-let notifySendAvailable: boolean | null = null
-let ffplayAvailable: boolean | null = null
-let unsupportedPlatformWarningShown = false
+let notifySendAvailable: boolean | null = null;
+let ffplayAvailable: boolean | null = null;
+let unsupportedPlatformWarningShown = false;
 
 async function checkCommand($: BunShell, command: string): Promise<boolean> {
   try {
-    await $`which ${command}`.quiet()
-    return true
+    await $`which ${command}`.quiet();
+    return true;
   } catch {
-    return false
+    return false;
   }
 }
 
 async function checkNotifySend($: BunShell): Promise<boolean> {
-  if (notifySendAvailable !== null) return notifySendAvailable
-  notifySendAvailable = await checkCommand($, 'notify-send')
+  if (notifySendAvailable !== null) return notifySendAvailable;
+  notifySendAvailable = await checkCommand($, 'notify-send');
   if (!notifySendAvailable) {
-    console.error(
-      'notify-send is not installed. Install it with: sudo apt install libnotify-bin'
-    )
+    console.error('notify-send is not installed. Install it with: sudo apt install libnotify-bin');
   }
-  return notifySendAvailable
+  return notifySendAvailable;
 }
 
 async function checkFfplay($: BunShell): Promise<boolean> {
-  if (ffplayAvailable !== null) return ffplayAvailable
-  ffplayAvailable = await checkCommand($, 'ffplay')
+  if (ffplayAvailable !== null) return ffplayAvailable;
+  ffplayAvailable = await checkCommand($, 'ffplay');
   if (!ffplayAvailable) {
-    console.error(
-      'ffplay is not installed. Install it with: sudo apt install ffmpeg'
-    )
+    console.error('ffplay is not installed. Install it with: sudo apt install ffmpeg');
   }
-  return ffplayAvailable
+  return ffplayAvailable;
 }
 
 function warnUnsupportedPlatform(platform: string): void {
-  if (unsupportedPlatformWarningShown) return
+  if (unsupportedPlatformWarningShown) return;
   console.error(
     `Unsupported platform: ${platform}. Notifications are only supported on macOS and Linux.`
-  )
-  unsupportedPlatformWarningShown = true
+  );
+  unsupportedPlatformWarningShown = true;
 }
 
-export async function sendNotification(
-  title: string,
-  message: string,
-  $: BunShell
-): Promise<void> {
-  const platform = process.platform
+export async function sendNotification(title: string, message: string, $: BunShell): Promise<void> {
+  const platform = process.platform;
 
   try {
     if (platform === 'darwin') {
-      const escapedMessage = message.replaceAll("'", "'\"'\"'")
-      const escapedTitle = title.replaceAll("'", "'\"'\"'")
-      await $`osascript -e 'display notification "${escapedMessage}" with title "${escapedTitle}"'`.quiet()
+      const escapedMessage = message.replaceAll("'", "'\"'\"'");
+      const escapedTitle = title.replaceAll("'", "'\"'\"'");
+      await $`osascript -e 'display notification "${escapedMessage}" with title "${escapedTitle}"'`.quiet();
     } else if (platform === 'linux') {
       if (!(await checkNotifySend($))) {
-        return
+        return;
       }
-      const escapedMessage = message
-        .replaceAll('"', String.raw`\"`)
-        .replaceAll('\n', ' ')
-      const escapedTitle = title
-        .replaceAll('"', String.raw`\"`)
-        .replaceAll('\n', ' ')
-      await $`notify-send "${escapedTitle}" "${escapedMessage}"`.quiet()
+      const escapedMessage = message.replaceAll('"', String.raw`\"`).replaceAll('\n', ' ');
+      const escapedTitle = title.replaceAll('"', String.raw`\"`).replaceAll('\n', ' ');
+      await $`notify-send "${escapedTitle}" "${escapedMessage}"`.quiet();
     } else {
-      warnUnsupportedPlatform(platform)
+      warnUnsupportedPlatform(platform);
     }
   } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : String(err)
-    console.error('Failed to send notification:', errorMessage)
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    console.error('Failed to send notification:', errorMessage);
   }
 }
 
@@ -83,31 +71,29 @@ export async function playNotificationSound(
   volume: number,
   $: BunShell
 ): Promise<void> {
-  const soundPath = isAbsolute(soundFile)
-    ? soundFile
-    : join(getAssetsPath(), 'sounds', soundFile)
-  const platform = process.platform
-  const clampedVolume = Math.max(0, Math.min(1, volume))
+  const soundPath = isAbsolute(soundFile) ? soundFile : join(getAssetsPath(), 'sounds', soundFile);
+  const platform = process.platform;
+  const clampedVolume = Math.max(0, Math.min(1, volume));
 
   if (!existsSync(soundPath)) {
-    console.error(`Sound file not found: ${soundPath}`)
-    return
+    console.error(`Sound file not found: ${soundPath}`);
+    return;
   }
 
   try {
     if (platform === 'darwin') {
-      const afplayVolume = Math.round(clampedVolume * 255)
-      await $`afplay -v ${afplayVolume / 255} "${soundPath}"`.quiet()
+      const afplayVolume = Math.round(clampedVolume * 255);
+      await $`afplay -v ${afplayVolume / 255} "${soundPath}"`.quiet();
     } else if (platform === 'linux') {
       if (!(await checkFfplay($))) {
-        return
+        return;
       }
-      await $`ffplay -nodisp -autoexit -loglevel quiet -volume ${Math.round(clampedVolume * 100)} ${soundPath}`.quiet()
+      await $`ffplay -nodisp -autoexit -loglevel quiet -volume ${Math.round(clampedVolume * 100)} ${soundPath}`.quiet();
     } else {
-      warnUnsupportedPlatform(platform)
+      warnUnsupportedPlatform(platform);
     }
   } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : String(err)
-    console.error('Failed to play notification sound:', errorMessage)
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    console.error('Failed to play notification sound:', errorMessage);
   }
 }

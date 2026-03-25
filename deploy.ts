@@ -56,9 +56,9 @@ function build(): void {
   console.log('Building plugin...')
   try {
     execSync('npm run build', { stdio: 'inherit' })
-    console.log('✓ Build complete')
+    console.log('Build complete')
   } catch {
-    console.error('✗ Build failed')
+    console.error('Build failed')
     process.exit(1)
   }
 }
@@ -98,7 +98,7 @@ function install(): void {
   console.log(`Installing to ${pluginsDir}...`)
 
   if (!existsSync(distDir)) {
-    console.error('✗ dist/ directory not found. Run build first.')
+    console.error('Failed: dist/ directory not found. Run build first.')
     process.exit(1)
   }
 
@@ -108,7 +108,7 @@ function install(): void {
 
   console.log('  Copying files...')
   copyRecursive(distDir, pluginsDir)
-  console.log('✓ Installation complete')
+  console.log('Installation complete')
 }
 
 function main(): void {

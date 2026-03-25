@@ -1,41 +1,41 @@
-import { fileURLToPath } from 'node:url'
-import { dirname, join } from 'node:path'
-import { readFileSync, existsSync } from 'node:fs'
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+import { readFileSync, existsSync } from 'node:fs';
 import type {
   PluginConfig,
   NotificationEventType,
   EffectiveEventConfig,
   MessageContext,
-} from './types.js'
-export { DEFAULT_MESSAGES } from './types.js'
+} from './types.js';
+export { DEFAULT_MESSAGES } from './types.js';
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export function getAssetsPath(): string {
-  return join(__dirname, 'assets')
+  return join(__dirname, 'assets');
 }
 
 function stripJsonComments(str: string): string {
-  return str.replaceAll(/\/\/.*$/gm, '').replaceAll(/\/\*[\s\S]*?\*\//g, '')
+  return str.replaceAll(/\/\/.*$/gm, '').replaceAll(/\/\*[\s\S]*?\*\//g, '');
 }
 
 function getNextNonWhitespaceChar(str: string, startIndex: number): string | undefined {
-  let index = startIndex
+  let index = startIndex;
 
   while (index < str.length && /\s/.test(str[index])) {
-    index += 1
+    index += 1;
   }
 
-  return str[index]
+  return str[index];
 }
 
 function getUpdatedEscapeState(char: string, escaped: boolean): boolean {
   if (escaped) {
-    return false
+    return false;
   }
 
-  return char === '\\'
+  return char === '\\';
 }
 
 function updateStringState(
@@ -47,86 +47,82 @@ function updateStringState(
     return {
       inString: char === '"',
       escaped: false,
-    }
+    };
   }
 
   return {
     inString: escaped || char !== '"',
     escaped: getUpdatedEscapeState(char, escaped),
-  }
+  };
 }
 
 function isTrailingComma(str: string, index: number): boolean {
   if (str[index] !== ',') {
-    return false
+    return false;
   }
 
-  const nextChar = getNextNonWhitespaceChar(str, index + 1)
-  return nextChar === '}' || nextChar === ']'
+  const nextChar = getNextNonWhitespaceChar(str, index + 1);
+  return nextChar === '}' || nextChar === ']';
 }
 
 function stripTrailingCommas(str: string): string {
-  let result = ''
-  let inString = false
-  let escaped = false
+  let result = '';
+  let inString = false;
+  let escaped = false;
 
   for (let index = 0; index < str.length; index += 1) {
-    const char = str[index]
-    const stringState = updateStringState(char, inString, escaped)
+    const char = str[index];
+    const stringState = updateStringState(char, inString, escaped);
 
     if (inString) {
-      result += char
-      inString = stringState.inString
-      escaped = stringState.escaped
-      continue
+      result += char;
+      inString = stringState.inString;
+      escaped = stringState.escaped;
+      continue;
     }
 
     if (stringState.inString) {
-      inString = true
-      result += char
-      continue
+      inString = true;
+      result += char;
+      continue;
     }
 
     if (isTrailingComma(str, index)) {
-      continue
+      continue;
     }
 
-    result += char
+    result += char;
   }
 
-  return result
+  return result;
 }
 
 export function loadConfig(): PluginConfig {
-  const configPath = join(__dirname, 'notif.jsonc')
+  const configPath = join(__dirname, 'notif.jsonc');
 
   if (!existsSync(configPath)) {
-    console.error(
-      `Config file not found: ${configPath}. Using default settings.`
-    )
-    return {}
+    console.error(`Config file not found: ${configPath}. Using default settings.`);
+    return {};
   }
 
-  let content: string
+  let content: string;
   try {
-    content = readFileSync(configPath, 'utf-8')
+    content = readFileSync(configPath, 'utf-8');
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err)
-    console.error(
-      `Failed to read config file: ${message}. Using default settings.`
-    )
-    return {}
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(`Failed to read config file: ${message}. Using default settings.`);
+    return {};
   }
 
   try {
-    const stripped = stripTrailingCommas(stripJsonComments(content))
-    return JSON.parse(stripped) as PluginConfig
+    const stripped = stripTrailingCommas(stripJsonComments(content));
+    return JSON.parse(stripped) as PluginConfig;
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err)
+    const message = err instanceof Error ? err.message : String(err);
     console.error(
       `Failed to parse config file (invalid JSON): ${message}. Using default settings.`
-    )
-    return {}
+    );
+    return {};
   }
 }
 
@@ -134,19 +130,17 @@ export function getEffectiveConfig(
   config: PluginConfig,
   eventType: NotificationEventType
 ): EffectiveEventConfig {
-  const eventConfig = config.permissions?.[eventType] ?? {}
+  const eventConfig = config.permissions?.[eventType] ?? {};
 
   return {
     enabled: eventConfig.enabled ?? true,
     showDesktopNotification:
-      eventConfig.showDesktopNotification ??
-      config.showDesktopNotification ??
-      true,
+      eventConfig.showDesktopNotification ?? config.showDesktopNotification ?? true,
     soundAlert: eventConfig.soundAlert ?? config.soundAlert ?? true,
     soundFile: eventConfig.soundFile ?? config.soundFile ?? 'default.mp3',
     volume: eventConfig.volume ?? config.volume ?? 0.8,
     message: eventConfig.message ?? null,
-  }
+  };
 }
 
 export function formatMessage(
@@ -154,9 +148,9 @@ export function formatMessage(
   defaultMessage: string,
   context: MessageContext
 ): string {
-  const message = template ?? defaultMessage
+  const message = template ?? defaultMessage;
 
   return message
     .replaceAll('{projectName}', context.projectName ?? 'Unknown Project')
-    .replaceAll('{eventType}', context.eventType)
+    .replaceAll('{eventType}', context.eventType);
 }
