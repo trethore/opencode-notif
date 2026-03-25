@@ -1,6 +1,8 @@
 # Configuration
 
-Config file location: `~/.config/opencode/plugins/notif.jsonc`
+Default template: `./notif.jsonc`
+
+Config file location after install: `~/.config/opencode/plugins/notif.jsonc`
 
 ## Event Types
 

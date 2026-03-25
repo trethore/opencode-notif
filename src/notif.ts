@@ -5,8 +5,19 @@ import { loadConfig, getEffectiveConfig, formatMessage, DEFAULT_MESSAGES } from 
 import { CooldownManager } from './cooldown.js';
 import { sendNotification, playNotificationSound } from './notifications.js';
 
-function isQuestionTool(tool: string): boolean {
-  return tool === 'mcp_question' || tool === 'question';
+type SessionEvent = {
+  type: string;
+  properties?: unknown;
+};
+
+function isIdleStatus(event: SessionEvent): boolean {
+  if (event.type !== 'session.status') return false;
+  if (typeof event.properties !== 'object' || event.properties === null) return false;
+
+  const props = event.properties as { status?: unknown };
+  if (typeof props.status !== 'object' || props.status === null) return false;
+
+  return (props.status as { type?: unknown }).type === 'idle';
 }
 
 function getProjectName(directory: string, worktree: string): string | null {
@@ -15,13 +26,13 @@ function getProjectName(directory: string, worktree: string): string | null {
 }
 
 async function handleEvent(
-  event: { type: string },
+  event: SessionEvent,
   config: PluginConfig,
   cooldownManager: CooldownManager,
   projectName: string | null,
   $: BunShell
 ): Promise<void> {
-  if (event.type === 'session.idle') {
+  if (isIdleStatus(event)) {
     await handleNotification(config, cooldownManager, 'generationCompleted', projectName, $);
   }
 
@@ -76,7 +87,7 @@ export const NotificationPlugin: Plugin = async ({ $, directory, worktree }) => 
     },
 
     'tool.execute.before': async (input: { tool: string }, _output: unknown) => {
-      if (isQuestionTool(input.tool)) {
+      if (input.tool === 'question') {
         await handleNotification(config, cooldownManager, 'questionAsked', projectName, $);
       }
     },

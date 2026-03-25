@@ -20,7 +20,9 @@ npm run deploy
 
 ## Configuration
 
-Config file: `~/.config/opencode/plugins/notif.jsonc`
+Default template: `./notif.jsonc`
+
+Installed config file: `~/.config/opencode/plugins/notif.jsonc`
 
 ```jsonc
 {

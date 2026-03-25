@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { readFileSync, existsSync } from 'node:fs';
 import type {
   PluginConfig,
@@ -11,9 +11,28 @@ export { DEFAULT_MESSAGES } from './types.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+const CONFIG_FILE = 'notif.jsonc';
 
 export function getAssetsPath(): string {
   return join(__dirname, 'assets');
+}
+
+function resolveConfigPath(): string | null {
+  const localConfigPath = join(__dirname, CONFIG_FILE);
+
+  if (existsSync(localConfigPath)) {
+    return localConfigPath;
+  }
+
+  if (basename(__dirname) === 'src') {
+    const rootConfigPath = join(__dirname, '..', CONFIG_FILE);
+
+    if (existsSync(rootConfigPath)) {
+      return rootConfigPath;
+    }
+  }
+
+  return null;
 }
 
 function stripJsonComments(str: string): string {
@@ -98,10 +117,10 @@ function stripTrailingCommas(str: string): string {
 }
 
 export function loadConfig(): PluginConfig {
-  const configPath = join(__dirname, 'notif.jsonc');
+  const configPath = resolveConfigPath();
 
-  if (!existsSync(configPath)) {
-    console.error(`Config file not found: ${configPath}. Using default settings.`);
+  if (!configPath) {
+    console.error('Config file not found. Using default settings.');
     return {};
   }
 
