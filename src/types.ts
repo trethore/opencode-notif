@@ -13,6 +13,7 @@ export interface EventNotificationConfig {
   soundFile?: string;
   volume?: number;
   message?: string;
+  primaryOnly?: boolean;
 }
 
 export interface PermissionsConfig {
@@ -29,6 +30,7 @@ export interface PluginConfig {
   soundFile?: string;
   volume?: number;
   cooldown?: number;
+  primaryOnly?: boolean;
   permissions?: PermissionsConfig;
 }
 
@@ -39,11 +41,17 @@ export interface EffectiveEventConfig {
   soundFile: string;
   volume: number;
   message: string | null;
+  primaryOnly: boolean;
 }
 
 export interface MessageContext {
   projectName: string | null;
   eventType: NotificationEventType;
+}
+
+export interface SessionInfo {
+  id: string;
+  parentID?: string;
 }
 
 export type BunShell = PluginInput['$'];

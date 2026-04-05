@@ -13,6 +13,9 @@
   // Cooldown in seconds - prevents notification spam
   "cooldown": 30,
 
+  // Only notify for primary conversations (not sub-agents)
+  "primaryOnly": false,
+
   // Per-event permissions (override global settings)
   "permissions": {
     "generationCompleted": {
