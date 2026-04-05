@@ -202,6 +202,7 @@ export function getEffectiveConfig(
     soundFile: eventConfig.soundFile ?? config.soundFile ?? 'default.mp3',
     volume: eventConfig.volume ?? config.volume ?? 0.8,
     message: eventConfig.message ?? null,
+    primaryOnly: eventConfig.primaryOnly ?? config.primaryOnly ?? false,
   };
 }
 
