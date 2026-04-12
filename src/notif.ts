@@ -57,7 +57,7 @@ function resolveEvent(event: SessionEvent): ResolvedEvent | undefined {
   }
 }
 
-export const NotificationPlugin: Plugin = async ({ $, client, directory, worktree }) => {
+export const NotificationPlugin: Plugin = async ({ client, directory, worktree }) => {
   const config = loadConfig();
   const cooldownManager = new CooldownManager(config.cooldown ?? 30);
   const projectName = getProjectName(directory, worktree);
@@ -106,11 +106,11 @@ export const NotificationPlugin: Plugin = async ({ $, client, directory, worktre
     const tasks: Promise<void>[] = [];
 
     if (desktop) {
-      tasks.push(sendNotification('OpenCode', message, $));
+      tasks.push(sendNotification('OpenCode', message));
     }
 
     if (sound) {
-      tasks.push(playNotificationSound(effectiveConfig.soundFile, effectiveConfig.volume, $));
+      tasks.push(playNotificationSound(effectiveConfig.soundFile, effectiveConfig.volume));
     }
 
     await Promise.all(tasks);

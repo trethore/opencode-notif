@@ -1,81 +1,111 @@
-import path from 'node:path';
 import { existsSync } from 'node:fs';
-import type { BunShell } from './types.js';
+import path from 'node:path';
+import notifier from 'node-notifier';
+import createPlayer from 'play-sound';
 import { getAssetsPath } from './config.js';
 
-let notifySendAvailable: boolean | undefined;
-let ffplayAvailable: boolean | undefined;
-let unsupportedPlatformWarningShown = false;
+const WINDOWS_SOUND_SCRIPT = [
+  '$path = $args[0]',
+  '$player = New-Object -ComObject WMPlayer.OCX',
+  '$media = $player.newMedia($path)',
+  '$player.currentPlaylist.appendItem($media)',
+  '$player.settings.volume = __VOLUME__',
+  '$player.controls.play()',
+  'while ($player.playState -ne 1) { Start-Sleep -Milliseconds 100 }',
+  '$player.close()',
+].join('; ');
 
-async function checkCommand($: BunShell, command: string): Promise<boolean> {
-  try {
-    await $`which ${command}`.quiet();
-    return true;
-  } catch {
-    return false;
-  }
-}
+type AudioPlayOptions = {
+  player: string;
+  arguments: string[];
+};
 
-async function checkNotifySend($: BunShell): Promise<boolean> {
-  if (notifySendAvailable !== undefined) return notifySendAvailable;
-  notifySendAvailable = await checkCommand($, 'notify-send');
-  if (!notifySendAvailable) {
-    console.error('notify-send is not installed. Install it with: sudo apt install libnotify-bin');
-  }
-  return notifySendAvailable;
-}
-
-async function checkFfplay($: BunShell): Promise<boolean> {
-  if (ffplayAvailable !== undefined) return ffplayAvailable;
-  ffplayAvailable = await checkCommand($, 'ffplay');
-  if (!ffplayAvailable) {
-    console.error('ffplay is not installed. Install it with: sudo apt install ffmpeg');
-  }
-  return ffplayAvailable;
-}
-
-function warnUnsupportedPlatform(platform: string): void {
-  if (unsupportedPlatformWarningShown) return;
-  console.error(
-    `Unsupported platform: ${platform}. Notifications are only supported on macOS and Linux.`
-  );
-  unsupportedPlatformWarningShown = true;
-}
-
-export async function sendNotification(title: string, message: string, $: BunShell): Promise<void> {
-  const platform = process.platform;
-
-  try {
-    if (platform === 'darwin') {
-      const escapedMessage = message.replaceAll("'", "'\"'\"'");
-      const escapedTitle = title.replaceAll("'", "'\"'\"'");
-      await $`osascript -e 'display notification "${escapedMessage}" with title "${escapedTitle}"'`.quiet();
-    } else if (platform === 'linux') {
-      if (!(await checkNotifySend($))) {
-        return;
-      }
-      const escapedMessage = message.replaceAll('"', String.raw`\"`).replaceAll('\n', ' ');
-      const escapedTitle = title.replaceAll('"', String.raw`\"`).replaceAll('\n', ' ');
-      await $`notify-send "${escapedTitle}" "${escapedMessage}"`.quiet();
-    } else {
-      warnUnsupportedPlatform(platform);
-    }
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error('Failed to send notification:', errorMessage);
-  }
-}
-
-export async function playNotificationSound(
-  soundFile: string,
-  volume: number,
-  $: BunShell
-): Promise<void> {
-  const soundPath = path.isAbsolute(soundFile)
+function resolveSoundPath(soundFile: string): string {
+  return path.isAbsolute(soundFile)
     ? soundFile
     : path.join(getAssetsPath(), 'sounds', soundFile);
-  const platform = process.platform;
-  const clampedVolume = Math.max(0, Math.min(1, volume));
+}
+
+function clampVolume(volume: number): number {
+  return Math.max(0, Math.min(1, volume));
+}
+
+function getAudioPlayOptions(volume: number): AudioPlayOptions {
+  const normalizedVolume = clampVolume(volume);
+
+  switch (process.platform) {
+    case 'darwin': {
+      return {
+        player: 'afplay',
+        arguments: ['-v', `${normalizedVolume}`],
+      };
+    }
+
+    case 'linux': {
+      return {
+        player: 'ffplay',
+        arguments: ['-nodisp', '-autoexit', '-loglevel', 'quiet', '-volume', `${Math.round(normalizedVolume * 100)}`],
+      };
+    }
+
+    case 'win32': {
+      return {
+        player: 'powershell',
+        arguments: [
+          '-NoProfile',
+          '-NonInteractive',
+          '-ExecutionPolicy',
+          'Bypass',
+          '-Command',
+          WINDOWS_SOUND_SCRIPT.replace('__VOLUME__', `${Math.round(normalizedVolume * 100)}`),
+        ],
+      };
+    }
+
+    default: {
+      throw new Error(`Unsupported platform: ${process.platform}`);
+    }
+  }
+}
+
+function playAudioFile(soundPath: string, volume: number): Promise<void> {
+  const audioOptions = getAudioPlayOptions(volume);
+  const audioPlayer = createPlayer({ player: audioOptions.player });
+
+  return new Promise((resolve, reject) => {
+    audioPlayer.play(soundPath, { [audioOptions.player]: audioOptions.arguments }, (error) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+
+      resolve();
+    });
+  });
+}
+
+export function sendNotification(title: string, message: string): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    notifier.notify({
+      title,
+      message,
+      timeout: 5,
+    }, (error) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+
+      resolve();
+    });
+  }).catch((error: unknown) => {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error('Failed to send notification:', errorMessage);
+  });
+}
+
+export async function playNotificationSound(soundFile: string, volume: number): Promise<void> {
+  const soundPath = resolveSoundPath(soundFile);
 
   if (!existsSync(soundPath)) {
     console.error(`Sound file not found: ${soundPath}`);
@@ -83,17 +113,7 @@ export async function playNotificationSound(
   }
 
   try {
-    if (platform === 'darwin') {
-      const afplayVolume = Math.round(clampedVolume * 255);
-      await $`afplay -v ${afplayVolume / 255} "${soundPath}"`.quiet();
-    } else if (platform === 'linux') {
-      if (!(await checkFfplay($))) {
-        return;
-      }
-      await $`ffplay -nodisp -autoexit -loglevel quiet -volume ${Math.round(clampedVolume * 100)} ${soundPath}`.quiet();
-    } else {
-      warnUnsupportedPlatform(platform);
-    }
+    await playAudioFile(soundPath, volume);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error('Failed to play notification sound:', errorMessage);

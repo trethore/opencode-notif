@@ -5,10 +5,10 @@
   "main": "src/notif.ts",
   "type": "module",
   "scripts": {
-    "build": "tsx build.ts",
-    "deploy": "tsx deploy.ts",
-    "deploy:build": "tsx deploy.ts --build-only",
-    "deploy:install": "tsx deploy.ts --install-only",
+    "build": "tsx scripts/build.ts",
+    "deploy": "tsx scripts/deploy.ts",
+    "deploy:build": "tsx scripts/deploy.ts --build-only",
+    "deploy:install": "tsx scripts/deploy.ts --install-only",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
@@ -24,7 +24,9 @@
   "author": "trethore",
   "license": "MIT",
   "dependencies": {
-    "@opencode-ai/plugin": "^1.4.3"
+    "@opencode-ai/plugin": "^1.4.3",
+    "node-notifier": "^10.0.1",
+    "play-sound": "^1.1.6"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
