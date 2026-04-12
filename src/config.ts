@@ -6,6 +6,7 @@ import type {
   NotificationEventType,
   EffectiveEventConfig,
   MessageContext,
+  EventNotificationConfig,
 } from './types.js';
 export { DEFAULT_MESSAGES } from './types.js';
 
@@ -46,28 +47,13 @@ function stripJsonComments(str: string): string {
     const char = str[index];
     const next = str[index + 1];
 
-    if (!inString && char === '/' && next === '/') {
-      index += 1;
-
-      while (index + 1 < str.length && str[index + 1] !== '\n' && str[index + 1] !== '\r') {
-        index += 1;
-      }
-
+    if (!inString && isLineCommentStart(char, next)) {
+      index = skipLineComment(str, index);
       continue;
     }
 
-    if (!inString && char === '/' && next === '*') {
-      index += 1;
-
-      while (index + 1 < str.length) {
-        if (str[index + 1] === '*' && str[index + 2] === '/') {
-          index += 2;
-          break;
-        }
-
-        index += 1;
-      }
-
+    if (!inString && isBlockCommentStart(char, next)) {
+      index = skipBlockComment(str, index);
       continue;
     }
 
@@ -78,6 +64,38 @@ function stripJsonComments(str: string): string {
   }
 
   return result;
+}
+
+function isLineCommentStart(char: string, next: string | undefined): boolean {
+  return char === '/' && next === '/';
+}
+
+function isBlockCommentStart(char: string, next: string | undefined): boolean {
+  return char === '/' && next === '*';
+}
+
+function skipLineComment(str: string, startIndex: number): number {
+  let index = startIndex + 1;
+
+  while (index + 1 < str.length && str[index + 1] !== '\n' && str[index + 1] !== '\r') {
+    index += 1;
+  }
+
+  return index;
+}
+
+function skipBlockComment(str: string, startIndex: number): number {
+  let index = startIndex + 1;
+
+  while (index + 1 < str.length) {
+    if (str[index + 1] === '*' && str[index + 2] === '/') {
+      return index + 2;
+    }
+
+    index += 1;
+  }
+
+  return index;
 }
 
 function getNextNonWhitespaceChar(str: string, startIndex: number): string | undefined {
@@ -188,20 +206,33 @@ export function loadConfig(): PluginConfig {
   }
 }
 
+function withDefault<T>(value: T | undefined, fallback: T): T {
+  return value ?? fallback;
+}
+
+function getEventConfig(
+  config: PluginConfig,
+  eventType: NotificationEventType
+): EventNotificationConfig {
+  return config.permissions?.[eventType] ?? {};
+}
+
 export function getEffectiveConfig(
   config: PluginConfig,
   eventType: NotificationEventType
 ): EffectiveEventConfig {
-  const eventConfig = config.permissions?.[eventType] ?? {};
+  const eventConfig = getEventConfig(config, eventType);
 
   return {
-    enabled: eventConfig.enabled ?? true,
-    showDesktopNotification:
-      eventConfig.showDesktopNotification ?? config.showDesktopNotification ?? true,
-    soundAlert: eventConfig.soundAlert ?? config.soundAlert ?? true,
-    primaryOnly: eventConfig.primaryOnly ?? config.primaryOnly ?? false,
-    soundFile: eventConfig.soundFile ?? config.soundFile ?? 'default.mp3',
-    volume: eventConfig.volume ?? config.volume ?? 0.8,
+    enabled: withDefault(eventConfig.enabled, true),
+    showDesktopNotification: withDefault(
+      eventConfig.showDesktopNotification,
+      withDefault(config.showDesktopNotification, true)
+    ),
+    soundAlert: withDefault(eventConfig.soundAlert, withDefault(config.soundAlert, true)),
+    primaryOnly: withDefault(eventConfig.primaryOnly, withDefault(config.primaryOnly, false)),
+    soundFile: withDefault(eventConfig.soundFile, withDefault(config.soundFile, 'default.mp3')),
+    volume: withDefault(eventConfig.volume, withDefault(config.volume, 0.8)),
     message: eventConfig.message,
   };
 }

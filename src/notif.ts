@@ -17,6 +17,13 @@ type ResolvedEvent = {
   sessionID?: string;
 };
 
+type NotificationContext = {
+  config: ReturnType<typeof loadConfig>;
+  cooldownManager: CooldownManager;
+  projectName?: string;
+  isPrimary: (sessionID?: string) => Promise<boolean>;
+};
+
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== undefined && value instanceof Object;
 }
@@ -57,13 +64,12 @@ function resolveEvent(event: SessionEvent): ResolvedEvent | undefined {
   }
 }
 
-export const NotificationPlugin: Plugin = async ({ client, directory, worktree }) => {
-  const config = loadConfig();
-  const cooldownManager = new CooldownManager(config.cooldown ?? 30);
-  const projectName = getProjectName(directory, worktree);
-  const cache: SessionCache = new Map();
-
-  const isPrimary = async (sessionID?: string): Promise<boolean> => {
+function createPrimarySessionResolver(
+  client: Parameters<Plugin>[0]['client'],
+  directory: string,
+  cache: SessionCache
+): (sessionID?: string) => Promise<boolean> {
+  return async (sessionID?: string): Promise<boolean> => {
     if (!sessionID) return true;
 
     const cached = cache.get(sessionID);
@@ -84,36 +90,54 @@ export const NotificationPlugin: Plugin = async ({ client, directory, worktree }
     cache.set(sessionID, run);
     return run;
   };
+}
 
-  const notify = async (eventType: NotificationEventType, sessionID?: string): Promise<void> => {
-    if (config.enabled === false) return;
+async function notifyEvent(
+  context: NotificationContext,
+  eventType: NotificationEventType,
+  sessionID?: string
+): Promise<void> {
+  if (context.config.enabled === false) return;
 
-    const effectiveConfig = getEffectiveConfig(config, eventType);
-    if (!effectiveConfig.enabled) return;
+  const effectiveConfig = getEffectiveConfig(context.config, eventType);
+  if (!effectiveConfig.enabled) return;
 
-    const desktop = effectiveConfig.showDesktopNotification;
-    const sound =
-      effectiveConfig.soundAlert &&
-      (!effectiveConfig.primaryOnly || (await isPrimary(sessionID)));
-    if (!desktop && !sound) return;
-    if (!cooldownManager.canNotify()) return;
+  const desktop = effectiveConfig.showDesktopNotification;
+  const sound =
+    effectiveConfig.soundAlert &&
+    (!effectiveConfig.primaryOnly || (await context.isPrimary(sessionID)));
 
-    const message = formatMessage(effectiveConfig.message, DEFAULT_MESSAGES[eventType], {
-      projectName,
-      eventType,
-    });
+  if (!desktop && !sound) return;
+  if (!context.cooldownManager.canNotify()) return;
 
-    const tasks: Promise<void>[] = [];
+  const message = formatMessage(effectiveConfig.message, DEFAULT_MESSAGES[eventType], {
+    projectName: context.projectName,
+    eventType,
+  });
 
-    if (desktop) {
-      tasks.push(sendNotification('OpenCode', message));
-    }
+  const tasks: Promise<void>[] = [];
 
-    if (sound) {
-      tasks.push(playNotificationSound(effectiveConfig.soundFile, effectiveConfig.volume));
-    }
+  if (desktop) {
+    tasks.push(sendNotification('OpenCode', message));
+  }
 
-    await Promise.all(tasks);
+  if (sound) {
+    tasks.push(playNotificationSound(effectiveConfig.soundFile, effectiveConfig.volume));
+  }
+
+  await Promise.all(tasks);
+}
+
+export const NotificationPlugin: Plugin = async ({ client, directory, worktree }) => {
+  const config = loadConfig();
+  const cooldownManager = new CooldownManager(config.cooldown ?? 30);
+  const projectName = getProjectName(directory, worktree);
+  const cache: SessionCache = new Map();
+  const context: NotificationContext = {
+    config,
+    cooldownManager,
+    projectName,
+    isPrimary: createPrimarySessionResolver(client, directory, cache),
   };
 
   return {
@@ -121,12 +145,12 @@ export const NotificationPlugin: Plugin = async ({ client, directory, worktree }
       const resolved = resolveEvent(event);
       if (!resolved) return;
 
-      await notify(resolved.eventType, resolved.sessionID);
+      await notifyEvent(context, resolved.eventType, resolved.sessionID);
     },
 
     'tool.execute.before': async (input: { tool: string; sessionID: string }, _output: unknown) => {
       if (input.tool === 'question') {
-        await notify('questionAsked', input.sessionID);
+        await notifyEvent(context, 'questionAsked', input.sessionID);
       }
     },
   };

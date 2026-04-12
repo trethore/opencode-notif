@@ -39,6 +39,51 @@ function runGit(args: string[], cwd?: string, allowFailure = false): boolean {
   throw new Error(`git ${args.join(' ')} failed with exit code ${result.status ?? 1}`);
 }
 
+type SyncOptions = {
+  repoUrl: string;
+  repoRef: string;
+  targetDir: string;
+};
+
+function getSyncOptions(args: string[]): SyncOptions {
+  return {
+    repoUrl: process.env.OPENCODE_REPO_URL ?? DEFAULT_REPO_URL,
+    repoRef: args[0] ?? process.env.OPENCODE_REPO_REF ?? DEFAULT_REPO_REF,
+    targetDir: path.resolve(process.cwd(), process.env.OPENCODE_TARGET_DIR ?? DEFAULT_TARGET_DIR),
+  };
+}
+
+function initializeCheckout(targetDir: string, repoUrl: string, repoRef: string): void {
+  if (existsSync(path.resolve(targetDir, '.git'))) {
+    console.log(`Updating existing OpenCode checkout in ${targetDir}...`);
+    runGit(['remote', 'set-url', 'origin', repoUrl], targetDir);
+    return;
+  }
+
+  console.log(`Initializing OpenCode checkout in ${targetDir}...`);
+  mkdirSync(targetDir, { recursive: true });
+  runGit(['init', '-b', repoRef, targetDir]);
+  runGit(['remote', 'add', 'origin', repoUrl], targetDir);
+}
+
+function fetchRef(targetDir: string, repoUrl: string, repoRef: string): void {
+  const fetchedBranch = runGit(['fetch', '--depth', '1', 'origin', repoRef], targetDir, true);
+
+  if (fetchedBranch) {
+    return;
+  }
+
+  const fetchedTag = runGit(
+    ['fetch', '--depth', '1', 'origin', `refs/tags/${repoRef}:refs/tags/${repoRef}`],
+    targetDir,
+    true
+  );
+
+  if (!fetchedTag) {
+    throw new Error(`Failed to fetch ref '${repoRef}' from ${repoUrl}`);
+  }
+}
+
 function main(): void {
   const args = process.argv.slice(2);
 
@@ -47,34 +92,11 @@ function main(): void {
     return;
   }
 
-  const repoUrl = process.env.OPENCODE_REPO_URL ?? DEFAULT_REPO_URL;
-  const repoRef = args[0] ?? process.env.OPENCODE_REPO_REF ?? DEFAULT_REPO_REF;
-  const targetDir = path.resolve(process.cwd(), process.env.OPENCODE_TARGET_DIR ?? DEFAULT_TARGET_DIR);
+  const { repoUrl, repoRef, targetDir } = getSyncOptions(args);
 
   mkdirSync(path.dirname(targetDir), { recursive: true });
-
-  if (existsSync(path.resolve(targetDir, '.git'))) {
-    console.log(`Updating existing OpenCode checkout in ${targetDir}...`);
-    runGit(['remote', 'set-url', 'origin', repoUrl], targetDir);
-  } else {
-    console.log(`Initializing OpenCode checkout in ${targetDir}...`);
-    mkdirSync(targetDir, { recursive: true });
-    runGit(['init', '-b', repoRef, targetDir]);
-    runGit(['remote', 'add', 'origin', repoUrl], targetDir);
-  }
-
-  const fetchedBranch = runGit(['fetch', '--depth', '1', 'origin', repoRef], targetDir, true);
-  const fetchedTag =
-    !fetchedBranch &&
-    runGit(
-      ['fetch', '--depth', '1', 'origin', `refs/tags/${repoRef}:refs/tags/${repoRef}`],
-      targetDir,
-      true
-    );
-
-  if (!fetchedBranch && !fetchedTag) {
-    throw new Error(`Failed to fetch ref '${repoRef}' from ${repoUrl}`);
-  }
+  initializeCheckout(targetDir, repoUrl, repoRef);
+  fetchRef(targetDir, repoUrl, repoRef);
 
   runGit(['checkout', '--force', 'FETCH_HEAD'], targetDir);
   runGit(['clean', '-fd'], targetDir);

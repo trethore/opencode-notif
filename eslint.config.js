@@ -12,6 +12,9 @@ export default defineConfig(
   unicorn.configs.recommended,
   {
     rules: {
+      'complexity': ['error', 10],
+      'max-depth': ['error', 3],
+      'max-lines-per-function': ['error', 40],
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': [
         'warn',
