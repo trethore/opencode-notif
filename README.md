@@ -6,6 +6,7 @@ Desktop notifications and sound alerts for [OpenCode](https://github.com/anomaly
 
 - Desktop notifications and sound alerts
 - Configurable per-event (generation completed, permission requested, question asked, errors)
+- Optional `primaryOnly` sound gating globally or per-event for subagent-heavy workflows
 - Cooldown system to prevent spam
 - Cross-platform (macOS, Linux)
 
@@ -29,6 +30,7 @@ Installed config file: `~/.config/opencode/plugins/notif.jsonc`
   "enabled": true,
   "showDesktopNotification": true,
   "soundAlert": true,
+  "primaryOnly": false,
   "volume": 0.8,
   "cooldown": 30,
 }

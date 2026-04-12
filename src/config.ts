@@ -199,6 +199,7 @@ export function getEffectiveConfig(
     showDesktopNotification:
       eventConfig.showDesktopNotification ?? config.showDesktopNotification ?? true,
     soundAlert: eventConfig.soundAlert ?? config.soundAlert ?? true,
+    primaryOnly: eventConfig.primaryOnly ?? config.primaryOnly ?? false,
     soundFile: eventConfig.soundFile ?? config.soundFile ?? 'default.mp3',
     volume: eventConfig.volume ?? config.volume ?? 0.8,
     message: eventConfig.message,

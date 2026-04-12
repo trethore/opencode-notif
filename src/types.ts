@@ -10,6 +10,7 @@ export interface EventNotificationConfig {
   enabled?: boolean;
   showDesktopNotification?: boolean;
   soundAlert?: boolean;
+  primaryOnly?: boolean;
   soundFile?: string;
   volume?: number;
   message?: string;
@@ -26,6 +27,7 @@ export interface PluginConfig {
   enabled?: boolean;
   showDesktopNotification?: boolean;
   soundAlert?: boolean;
+  primaryOnly?: boolean;
   soundFile?: string;
   volume?: number;
   cooldown?: number;
@@ -36,6 +38,7 @@ export interface EffectiveEventConfig {
   enabled: boolean;
   showDesktopNotification: boolean;
   soundAlert: boolean;
+  primaryOnly: boolean;
   soundFile: string;
   volume: number;
   message?: string;

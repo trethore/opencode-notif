@@ -20,6 +20,7 @@ Config file location after install: `~/.config/opencode/plugins/notif.jsonc`
 | `enabled`                 | boolean | `true`          | Master switch                                              |
 | `showDesktopNotification` | boolean | `true`          | Enable desktop notifications                               |
 | `soundAlert`              | boolean | `true`          | Enable sound alerts                                        |
+| `primaryOnly`             | boolean | `false`         | Play sounds only for primary sessions, not subagents       |
 | `soundFile`               | string  | `"default.mp3"` | Built-in file from `assets/notif/sounds/` or absolute path |
 | `volume`                  | number  | `0.8`           | Volume level (0.0 to 1.0)                                  |
 | `cooldown`                | number  | `30`            | Seconds between notifications                              |
@@ -35,6 +36,7 @@ Each event can override global settings:
       "enabled": true,
       "showDesktopNotification": true,
       "soundAlert": true,
+      "primaryOnly": true,
       "soundFile": "ding1.mp3",
       "volume": 0.5,
       "message": "Done with {projectName}!",
@@ -94,6 +96,27 @@ Each event can override global settings:
 {
   "showDesktopNotification": false,
   "soundAlert": true,
+}
+```
+
+### Sound only for primary agent
+
+```jsonc
+{
+  "primaryOnly": true,
+}
+```
+
+### Override for one event
+
+```jsonc
+{
+  "primaryOnly": true,
+  "permissions": {
+    "sessionError": {
+      "primaryOnly": false,
+    },
+  },
 }
 ```
 

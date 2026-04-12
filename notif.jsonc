@@ -7,6 +7,7 @@
   // Global settings (apply to all events unless overridden)
   "showDesktopNotification": true,
   "soundAlert": true,
+  "primaryOnly": false,
   "soundFile": "default.mp3",
   "volume": 0.8,
 
