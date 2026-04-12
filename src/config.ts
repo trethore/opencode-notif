@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url';
-import { basename, dirname, join } from 'node:path';
+import path from 'node:path';
 import { readFileSync, existsSync } from 'node:fs';
 import type {
   PluginConfig,
@@ -10,23 +10,23 @@ import type {
 export { DEFAULT_MESSAGES } from './types.js';
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const __dirname = path.dirname(__filename);
 const CONFIG_FILE = 'notif.jsonc';
 
 export function getAssetsPath(): string {
-  return join(__dirname, 'assets', 'notif');
+  return path.join(__dirname, 'assets', 'notif');
 }
 
-function resolveConfigPath(): { path: string | null; tried: string[] } {
-  const tried = [join(__dirname, CONFIG_FILE)];
+function resolveConfigPath(): { path?: string; tried: string[] } {
+  const tried = [path.join(__dirname, CONFIG_FILE)];
   const localConfigPath = tried[0];
 
   if (existsSync(localConfigPath)) {
     return { path: localConfigPath, tried };
   }
 
-  if (basename(__dirname) === 'src') {
-    const rootConfigPath = join(__dirname, '..', CONFIG_FILE);
+  if (path.basename(__dirname) === 'src') {
+    const rootConfigPath = path.join(__dirname, '..', CONFIG_FILE);
     tried.push(rootConfigPath);
 
     if (existsSync(rootConfigPath)) {
@@ -34,7 +34,7 @@ function resolveConfigPath(): { path: string | null; tried: string[] } {
     }
   }
 
-  return { path: null, tried };
+  return { tried };
 }
 
 function stripJsonComments(str: string): string {
@@ -169,9 +169,9 @@ export function loadConfig(): PluginConfig {
 
   let content: string;
   try {
-    content = readFileSync(config.path, 'utf-8');
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
+    content = readFileSync(config.path, 'utf8');
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
     console.error(`Failed to read config file: ${message}. Using default settings.`);
     return {};
   }
@@ -179,8 +179,8 @@ export function loadConfig(): PluginConfig {
   try {
     const stripped = stripTrailingCommas(stripJsonComments(content));
     return JSON.parse(stripped) as PluginConfig;
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
     console.error(
       `Failed to parse config file (invalid JSON): ${message}. Using default settings.`
     );
@@ -201,12 +201,12 @@ export function getEffectiveConfig(
     soundAlert: eventConfig.soundAlert ?? config.soundAlert ?? true,
     soundFile: eventConfig.soundFile ?? config.soundFile ?? 'default.mp3',
     volume: eventConfig.volume ?? config.volume ?? 0.8,
-    message: eventConfig.message ?? null,
+    message: eventConfig.message,
   };
 }
 
 export function formatMessage(
-  template: string | null,
+  template: string | undefined,
   defaultMessage: string,
   context: MessageContext
 ): string {

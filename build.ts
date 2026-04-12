@@ -1,6 +1,6 @@
 import { build as esbuild } from 'esbuild';
 import { readdirSync, statSync, copyFileSync, mkdirSync } from 'node:fs';
-import { join } from 'node:path';
+import path from 'node:path';
 
 const PLUGIN_NAME = 'notif';
 const CONFIG_FILE = 'notif.jsonc';
@@ -12,14 +12,14 @@ function copyRecursive(src: string, dest: string): void {
     mkdirSync(dest, { recursive: true });
     const files = readdirSync(src);
     for (const file of files) {
-      copyRecursive(join(src, file), join(dest, file));
+      copyRecursive(path.join(src, file), path.join(dest, file));
     }
   } else {
     copyFileSync(src, dest);
   }
 }
 
-async function build(): Promise<void> {
+async function buildProject(): Promise<void> {
   console.log('Building...');
 
   await esbuild({
@@ -43,8 +43,8 @@ async function build(): Promise<void> {
 }
 
 try {
-  await build();
+  await buildProject();
 } catch (error) {
   console.error(error);
-  process.exit(1);
+  process.exitCode = 1;
 }

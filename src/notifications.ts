@@ -1,10 +1,10 @@
-import { isAbsolute, join } from 'node:path';
+import path from 'node:path';
 import { existsSync } from 'node:fs';
 import type { BunShell } from './types.js';
 import { getAssetsPath } from './config.js';
 
-let notifySendAvailable: boolean | null = null;
-let ffplayAvailable: boolean | null = null;
+let notifySendAvailable: boolean | undefined;
+let ffplayAvailable: boolean | undefined;
 let unsupportedPlatformWarningShown = false;
 
 async function checkCommand($: BunShell, command: string): Promise<boolean> {
@@ -17,7 +17,7 @@ async function checkCommand($: BunShell, command: string): Promise<boolean> {
 }
 
 async function checkNotifySend($: BunShell): Promise<boolean> {
-  if (notifySendAvailable !== null) return notifySendAvailable;
+  if (notifySendAvailable !== undefined) return notifySendAvailable;
   notifySendAvailable = await checkCommand($, 'notify-send');
   if (!notifySendAvailable) {
     console.error('notify-send is not installed. Install it with: sudo apt install libnotify-bin');
@@ -26,7 +26,7 @@ async function checkNotifySend($: BunShell): Promise<boolean> {
 }
 
 async function checkFfplay($: BunShell): Promise<boolean> {
-  if (ffplayAvailable !== null) return ffplayAvailable;
+  if (ffplayAvailable !== undefined) return ffplayAvailable;
   ffplayAvailable = await checkCommand($, 'ffplay');
   if (!ffplayAvailable) {
     console.error('ffplay is not installed. Install it with: sudo apt install ffmpeg');
@@ -60,8 +60,8 @@ export async function sendNotification(title: string, message: string, $: BunShe
     } else {
       warnUnsupportedPlatform(platform);
     }
-  } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : String(err);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     console.error('Failed to send notification:', errorMessage);
   }
 }
@@ -71,7 +71,9 @@ export async function playNotificationSound(
   volume: number,
   $: BunShell
 ): Promise<void> {
-  const soundPath = isAbsolute(soundFile) ? soundFile : join(getAssetsPath(), 'sounds', soundFile);
+  const soundPath = path.isAbsolute(soundFile)
+    ? soundFile
+    : path.join(getAssetsPath(), 'sounds', soundFile);
   const platform = process.platform;
   const clampedVolume = Math.max(0, Math.min(1, volume));
 
@@ -92,8 +94,8 @@ export async function playNotificationSound(
     } else {
       warnUnsupportedPlatform(platform);
     }
-  } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : String(err);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     console.error('Failed to play notification sound:', errorMessage);
   }
 }

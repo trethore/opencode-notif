@@ -38,11 +38,11 @@ export interface EffectiveEventConfig {
   soundAlert: boolean;
   soundFile: string;
   volume: number;
-  message: string | null;
+  message?: string;
 }
 
 export interface MessageContext {
-  projectName: string | null;
+  projectName?: string;
   eventType: NotificationEventType;
 }
 

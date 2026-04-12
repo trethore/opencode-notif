@@ -1,4 +1,4 @@
-import { basename } from 'node:path';
+import path from 'node:path';
 import type { Plugin } from '@opencode-ai/plugin';
 import type { NotificationEventType, PluginConfig, BunShell } from './types.js';
 import { loadConfig, getEffectiveConfig, formatMessage, DEFAULT_MESSAGES } from './config.js';
@@ -10,26 +10,30 @@ type SessionEvent = {
   properties?: unknown;
 };
 
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== undefined && value instanceof Object;
+}
+
 function isIdleStatus(event: SessionEvent): boolean {
   if (event.type !== 'session.status') return false;
-  if (typeof event.properties !== 'object' || event.properties === null) return false;
+  if (!isObject(event.properties)) return false;
 
   const props = event.properties as { status?: unknown };
-  if (typeof props.status !== 'object' || props.status === null) return false;
+  if (!isObject(props.status)) return false;
 
   return (props.status as { type?: unknown }).type === 'idle';
 }
 
-function getProjectName(directory: string, worktree: string): string | null {
+function getProjectName(directory: string, worktree: string): string | undefined {
   const projectPath = worktree || directory;
-  return projectPath ? basename(projectPath) : null;
+  return projectPath ? path.basename(projectPath) : undefined;
 }
 
 async function handleEvent(
   event: SessionEvent,
   config: PluginConfig,
   cooldownManager: CooldownManager,
-  projectName: string | null,
+  projectName: string | undefined,
   $: BunShell
 ): Promise<void> {
   if (isIdleStatus(event)) {
@@ -49,7 +53,7 @@ async function handleNotification(
   config: PluginConfig,
   cooldownManager: CooldownManager,
   eventType: NotificationEventType,
-  projectName: string | null,
+  projectName: string | undefined,
   $: BunShell
 ): Promise<void> {
   if (config.enabled === false) return;

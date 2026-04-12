@@ -15,14 +15,14 @@ Config file location after install: `~/.config/opencode/plugins/notif.jsonc`
 
 ## Global Options
 
-| Option                    | Type    | Default         | Description                        |
-| ------------------------- | ------- | --------------- | ---------------------------------- |
-| `enabled`                 | boolean | `true`          | Master switch                      |
-| `showDesktopNotification` | boolean | `true`          | Enable desktop notifications       |
-| `soundAlert`              | boolean | `true`          | Enable sound alerts                |
+| Option                    | Type    | Default         | Description                                                |
+| ------------------------- | ------- | --------------- | ---------------------------------------------------------- |
+| `enabled`                 | boolean | `true`          | Master switch                                              |
+| `showDesktopNotification` | boolean | `true`          | Enable desktop notifications                               |
+| `soundAlert`              | boolean | `true`          | Enable sound alerts                                        |
 | `soundFile`               | string  | `"default.mp3"` | Built-in file from `assets/notif/sounds/` or absolute path |
-| `volume`                  | number  | `0.8`           | Volume level (0.0 to 1.0)          |
-| `cooldown`                | number  | `30`            | Seconds between notifications      |
+| `volume`                  | number  | `0.8`           | Volume level (0.0 to 1.0)                                  |
+| `cooldown`                | number  | `30`            | Seconds between notifications                              |
 
 ## Per-Event Overrides
 

@@ -2,15 +2,19 @@
 
 import { execSync } from 'node:child_process';
 import { rmSync, existsSync, mkdirSync, copyFileSync, readdirSync, statSync } from 'node:fs';
-import { basename, join } from 'node:path';
+import path from 'node:path';
 import { homedir } from 'node:os';
 
 type Platform = 'linux' | 'darwin' | 'win32';
 
 const PLUGINS_DIR: Record<Platform, string> = {
-  linux: join(homedir(), '.config', 'opencode', 'plugins'),
-  darwin: join(homedir(), '.config', 'opencode', 'plugins'),
-  win32: join(process.env.APPDATA || join(homedir(), 'AppData', 'Roaming'), 'opencode', 'plugins'),
+  linux: path.join(homedir(), '.config', 'opencode', 'plugins'),
+  darwin: path.join(homedir(), '.config', 'opencode', 'plugins'),
+  win32: path.join(
+    process.env.APPDATA || path.join(homedir(), 'AppData', 'Roaming'),
+    'opencode',
+    'plugins'
+  ),
 };
 
 function getPluginsDir(): string {
@@ -27,7 +31,7 @@ function copyRecursive(src: string, dest: string): void {
   const stat = statSync(src);
 
   if (!stat.isDirectory()) {
-    const fileName = basename(src);
+    const fileName = path.basename(src);
     if (shouldPreserveFile(fileName) && existsSync(dest)) {
       return;
     }
@@ -37,12 +41,12 @@ function copyRecursive(src: string, dest: string): void {
 
   mkdirSync(dest, { recursive: true });
   for (const file of readdirSync(src)) {
-    copyRecursive(join(src, file), join(dest, file));
+    copyRecursive(path.join(src, file), path.join(dest, file));
   }
 }
 
 function replaceRecursive(src: string, dest: string): void {
-  const file = basename(src);
+  const file = path.basename(src);
 
   if (shouldPreserveFile(file) && existsSync(dest)) {
     return;
@@ -56,13 +60,13 @@ function replaceRecursive(src: string, dest: string): void {
 }
 
 function installAssets(src: string, dest: string): void {
-  const notif = join(src, 'notif');
+  const notif = path.join(src, 'notif');
   if (!existsSync(notif)) {
     return;
   }
 
   mkdirSync(dest, { recursive: true });
-  replaceRecursive(notif, join(dest, 'notif'));
+  replaceRecursive(notif, path.join(dest, 'notif'));
 }
 
 function build(): void {
@@ -117,12 +121,12 @@ function install(): void {
 
   for (const file of readdirSync(distDir)) {
     if (file === 'assets') {
-      installAssets(join(distDir, file), join(pluginsDir, file));
+      installAssets(path.join(distDir, file), path.join(pluginsDir, file));
       continue;
     }
 
-    removeExistingFile(join(pluginsDir, file), file);
-    replaceRecursive(join(distDir, file), join(pluginsDir, file));
+    removeExistingFile(path.join(pluginsDir, file), file);
+    replaceRecursive(path.join(distDir, file), path.join(pluginsDir, file));
   }
   console.log('Installation complete');
 }

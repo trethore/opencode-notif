@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 const DEFAULT_REPO_URL = 'https://github.com/sst/opencode.git';
@@ -36,7 +36,7 @@ function runGit(args: string[], cwd?: string, allowFailure = false): boolean {
     return false;
   }
 
-  process.exit(result.status ?? 1);
+  throw new Error(`git ${args.join(' ')} failed with exit code ${result.status ?? 1}`);
 }
 
 function main(): void {
@@ -49,18 +49,18 @@ function main(): void {
 
   const repoUrl = process.env.OPENCODE_REPO_URL ?? DEFAULT_REPO_URL;
   const repoRef = args[0] ?? process.env.OPENCODE_REPO_REF ?? DEFAULT_REPO_REF;
-  const targetDir = resolve(process.cwd(), process.env.OPENCODE_TARGET_DIR ?? DEFAULT_TARGET_DIR);
+  const targetDir = path.resolve(process.cwd(), process.env.OPENCODE_TARGET_DIR ?? DEFAULT_TARGET_DIR);
 
-  mkdirSync(dirname(targetDir), { recursive: true });
+  mkdirSync(path.dirname(targetDir), { recursive: true });
 
-  if (!existsSync(resolve(targetDir, '.git'))) {
+  if (existsSync(path.resolve(targetDir, '.git'))) {
+    console.log(`Updating existing OpenCode checkout in ${targetDir}...`);
+    runGit(['remote', 'set-url', 'origin', repoUrl], targetDir);
+  } else {
     console.log(`Initializing OpenCode checkout in ${targetDir}...`);
     mkdirSync(targetDir, { recursive: true });
     runGit(['init', '-b', repoRef, targetDir]);
     runGit(['remote', 'add', 'origin', repoUrl], targetDir);
-  } else {
-    console.log(`Updating existing OpenCode checkout in ${targetDir}...`);
-    runGit(['remote', 'set-url', 'origin', repoUrl], targetDir);
   }
 
   const fetchedBranch = runGit(['fetch', '--depth', '1', 'origin', repoRef], targetDir, true);
@@ -73,8 +73,7 @@ function main(): void {
     );
 
   if (!fetchedBranch && !fetchedTag) {
-    console.error(`Failed to fetch ref '${repoRef}' from ${repoUrl}`);
-    process.exit(1);
+    throw new Error(`Failed to fetch ref '${repoRef}' from ${repoUrl}`);
   }
 
   runGit(['checkout', '--force', 'FETCH_HEAD'], targetDir);
@@ -83,4 +82,9 @@ function main(): void {
   console.log(`OpenCode source is available at ${targetDir}`);
 }
 
-main();
+try {
+  main();
+} catch (error) {
+  console.error(error);
+  process.exitCode = 1;
+}
