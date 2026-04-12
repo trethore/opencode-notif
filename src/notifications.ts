@@ -5,14 +5,27 @@ import createPlayer from 'play-sound';
 import { getAssetsPath } from './config.js';
 
 const WINDOWS_SOUND_SCRIPT = [
-  '$path = $args[0]',
-  '$player = New-Object -ComObject WMPlayer.OCX',
-  '$media = $player.newMedia($path)',
-  '$player.currentPlaylist.appendItem($media)',
-  '$player.settings.volume = __VOLUME__',
-  '$player.controls.play()',
-  'while ($player.playState -ne 1) { Start-Sleep -Milliseconds 100 }',
-  '$player.close()',
+  '& { param([string]$path)',
+  'Add-Type -AssemblyName presentationCore',
+  '$player = New-Object System.Windows.Media.MediaPlayer',
+  'try {',
+  '$player.Volume = __VOLUME__',
+  '$player.Open([Uri]$path)',
+  '$player.Play()',
+  '$deadline = (Get-Date).AddSeconds(10)',
+  'while ((Get-Date) -lt $deadline) {',
+  'if ($player.NaturalDuration.HasTimeSpan) {',
+  '$duration = [Math]::Ceiling($player.NaturalDuration.TimeSpan.TotalMilliseconds) + 250',
+  'Start-Sleep -Milliseconds $duration',
+  'return',
+  '}',
+  'Start-Sleep -Milliseconds 100',
+  '}',
+  'throw "Timed out waiting for media to open."',
+  '} finally {',
+  '$player.Close()',
+  '}',
+  '}',
 ].join('; ');
 
 type AudioPlayOptions = {
@@ -57,7 +70,7 @@ function getAudioPlayOptions(volume: number): AudioPlayOptions {
           '-ExecutionPolicy',
           'Bypass',
           '-Command',
-          WINDOWS_SOUND_SCRIPT.replace('__VOLUME__', `${Math.round(normalizedVolume * 100)}`),
+          WINDOWS_SOUND_SCRIPT.replace('__VOLUME__', `${normalizedVolume}`),
         ],
       };
     }
